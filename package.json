@@ -1,0 +1,67 @@
+{
+  "name": "vitest-test-ratio",
+  "version": "0.1.0",
+  "description": "Measure Code to Test LOC ratio in Vitest projects.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mas0061/vitest-test-ratio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mas0061/vitest-test-ratio/issues"
+  },
+  "homepage": "https://github.com/mas0061/vitest-test-ratio#readme",
+  "packageManager": "pnpm@10.26.2",
+  "type": "module",
+  "bin": {
+    "vitest-test-ratio": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "vitest",
+    "testing",
+    "cli",
+    "loc",
+    "ratio"
+  ],
+  "engines": {
+    "node": ">=18.18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "dev": "vitest",
+    "demo": "pnpm run build && node dist/cli.js --cwd examples/basic --files",
+    "prepack": "pnpm run build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.6",
+    "@types/node": "25.3.5",
+    "@vitest/coverage-v8": "4.0.18",
+    "typescript": "5.9.3",
+    "vitest": "4.0.18"
+  },
+  "dependencies": {
+    "sloc": "0.3.2",
+    "tinyglobby": "0.2.15"
+  }
+}
