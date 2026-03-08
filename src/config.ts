@@ -270,7 +270,9 @@ function parseStringArray(source: string, key: string): ParsedStringArray {
 }
 
 function extractTestBlock(source: string): string | undefined {
-  const testMatch = source.match(/\btest\s*:\s*{/m);
+  const testMatch = source.match(
+    /(?:\btest\b|"test"|'test')\s*:\s*(?:(?:\/\*[\s\S]*?\*\/)|(?:\/\/[^\n]*(?:\n|$))|\s)*{/m,
+  );
   if (!testMatch || testMatch.index === undefined) {
     return undefined;
   }

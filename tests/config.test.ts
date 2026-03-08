@@ -46,6 +46,36 @@ export default {
     }
   });
 
+  it("reads include and exclude when test key is quoted and object starts after comments", async () => {
+    const projectDir = await createTempProject();
+    try {
+      await writeProjectFile(
+        projectDir,
+        "vitest.config.ts",
+        `
+export default {
+  "test":
+    /* comment before object */
+    // line comment before object
+    {
+      include: ["specs/**/*.ts"],
+      exclude: ["specs/ignored/**"]
+    }
+}
+`,
+      );
+
+      const result = await resolveTestPatterns(projectDir);
+
+      expect(result.configPath).toBe(path.join(projectDir, "vitest.config.ts"));
+      expect(result.usedConfigPatterns).toBe(true);
+      expect(result.include).toEqual(["specs/**/*.ts"]);
+      expect(result.exclude).toEqual(["specs/ignored/**"]);
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
+
   it("treats explicitly empty include/exclude arrays as configured values", async () => {
     const projectDir = await createTempProject();
     try {
