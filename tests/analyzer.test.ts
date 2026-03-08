@@ -113,6 +113,47 @@ export default {
     }
   });
 
+  it("keeps src files as code when only coverage.include/exclude is configured", async () => {
+    const projectDir = await createTempProject();
+    try {
+      await writeProjectFile(
+        projectDir,
+        "vitest.config.ts",
+        `
+export default {
+  test: {
+    environment: "node",
+    coverage: {
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"]
+    }
+  }
+}
+`,
+      );
+      await writeProjectFile(projectDir, "src/index.ts", "export const index = 1;\n");
+      await writeProjectFile(
+        projectDir,
+        "src/validators.ts",
+        "export const validate = () => true;\n",
+      );
+      await writeProjectFile(projectDir, "src/validators.test.ts", "expect(true).toBe(true);\n");
+
+      const result = await analyzeProject({ cwd: projectDir });
+
+      expect(result.project.codeLoc).toBe(2);
+      expect(result.project.testLoc).toBe(1);
+      expect(result.project.unmatchedFiles).toBe(1);
+      expect(result.files.find((entry) => entry.source === "src/index.ts")).toBeDefined();
+      expect(result.files.find((entry) => entry.source === "src/validators.ts")).toBeDefined();
+      expect(
+        result.files.find((entry) => entry.source === "src/validators.test.ts"),
+      ).toBeUndefined();
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
+
   it("sums multiple matching tests and marks unmatched files", async () => {
     const projectDir = await createTempProject();
     try {

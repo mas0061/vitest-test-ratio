@@ -97,4 +97,34 @@ export default {
       await removeTempProject(projectDir);
     }
   });
+
+  it("ignores nested coverage include/exclude when test.include is not set", async () => {
+    const projectDir = await createTempProject();
+    try {
+      await writeProjectFile(
+        projectDir,
+        "vitest.config.ts",
+        `
+export default {
+  test: {
+    environment: "node",
+    coverage: {
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.test.ts"]
+    }
+  }
+}
+`,
+      );
+
+      const result = await resolveTestPatterns(projectDir);
+
+      expect(result.configPath).toBe(path.join(projectDir, "vitest.config.ts"));
+      expect(result.usedConfigPatterns).toBe(false);
+      expect(result.include).toEqual(DEFAULT_TEST_INCLUDE);
+      expect(result.exclude).toEqual([]);
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
 });
