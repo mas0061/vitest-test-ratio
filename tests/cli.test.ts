@@ -1,5 +1,6 @@
 import { realpathSync } from "node:fs";
 import { mkdir, symlink } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -28,7 +29,9 @@ function createIoCapture() {
 }
 
 describe("runCli", () => {
-  it("detects main execution when argv[1] is a symlink path", async () => {
+  const itIfNotWin32 = process.platform === "win32" ? it.skip : it;
+
+  itIfNotWin32("detects main execution when argv[1] is a symlink path", async () => {
     const projectDir = await createTempProject();
     try {
       const cliPath = path.join(projectDir, "dist", "cli.js");
@@ -44,8 +47,11 @@ describe("runCli", () => {
   });
 
   it("returns false when argv[1] is unavailable or invalid", () => {
-    expect(shouldRunAsMain("file:///tmp/cli.js", undefined)).toBe(false);
-    expect(shouldRunAsMain("file:///tmp/cli.js", "/tmp/does-not-exist.js")).toBe(false);
+    const candidatePath = path.join(os.tmpdir(), "cli.js");
+    const missingPath = path.join(os.tmpdir(), `does-not-exist-${Date.now()}.js`);
+
+    expect(shouldRunAsMain(pathToFileURL(candidatePath).href, undefined)).toBe(false);
+    expect(shouldRunAsMain(pathToFileURL(candidatePath).href, missingPath)).toBe(false);
   });
 
   it("prints rails-stats-like summary", async () => {
