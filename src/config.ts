@@ -279,11 +279,27 @@ function extractTestBlock(source: string): string | undefined {
 
   let depth = 0;
   let start = -1;
-  let state: "code" | "single" | "double" | "template" = "code";
+  let state: "code" | "single" | "double" | "template" | "lineComment" | "blockComment" = "code";
   let escaped = false;
 
   for (let i = testMatch.index; i < source.length; i += 1) {
     const ch = source[i];
+    const next = source[i + 1];
+
+    if (state === "lineComment") {
+      if (ch === "\n") {
+        state = "code";
+      }
+      continue;
+    }
+
+    if (state === "blockComment") {
+      if (ch === "*" && next === "/") {
+        state = "code";
+        i += 1;
+      }
+      continue;
+    }
 
     if (state === "single") {
       if (escaped) {
@@ -315,6 +331,18 @@ function extractTestBlock(source: string): string | undefined {
       } else if (ch === "`") {
         state = "code";
       }
+      continue;
+    }
+
+    if (ch === "/" && next === "/") {
+      state = "lineComment";
+      i += 1;
+      continue;
+    }
+
+    if (ch === "/" && next === "*") {
+      state = "blockComment";
+      i += 1;
       continue;
     }
 

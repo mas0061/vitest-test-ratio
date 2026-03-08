@@ -157,4 +157,33 @@ export default {
       await removeTempProject(projectDir);
     }
   });
+
+  it("parses test include/exclude even when comments inside test contain braces", async () => {
+    const projectDir = await createTempProject();
+    try {
+      await writeProjectFile(
+        projectDir,
+        "vitest.config.ts",
+        `
+export default {
+  test: {
+    // comment with brace {
+    include: ["specs/**/*.ts"],
+    /* comment with closing brace } */
+    exclude: ["specs/ignored/**"]
+  }
+}
+`,
+      );
+
+      const result = await resolveTestPatterns(projectDir);
+
+      expect(result.configPath).toBe(path.join(projectDir, "vitest.config.ts"));
+      expect(result.usedConfigPatterns).toBe(true);
+      expect(result.include).toEqual(["specs/**/*.ts"]);
+      expect(result.exclude).toEqual(["specs/ignored/**"]);
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
 });
