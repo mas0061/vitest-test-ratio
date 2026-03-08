@@ -1,5 +1,7 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { analyzeProject } from "./analyzer.js";
 import { formatTextReport, selectTopEntries, sortFileEntries } from "./format.js";
 import type { AnalysisResult } from "./types.js";
@@ -141,7 +143,19 @@ export async function runCli(
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+export function shouldRunAsMain(importMetaUrl: string, argv1: string | undefined): boolean {
+  if (!argv1) {
+    return false;
+  }
+
+  try {
+    return importMetaUrl === pathToFileURL(realpathSync(argv1)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (shouldRunAsMain(import.meta.url, process.argv[1])) {
   runCli(process.argv.slice(2)).then((exitCode) => {
     if (exitCode !== 0) {
       process.exitCode = exitCode;

@@ -1,5 +1,9 @@
+import { realpathSync } from "node:fs";
+import { mkdir, symlink } from "node:fs/promises";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
-import { runCli } from "../src/cli.js";
+import { runCli, shouldRunAsMain } from "../src/cli.js";
 import { createTempProject, removeTempProject, writeProjectFile } from "./helpers.js";
 
 function createIoCapture() {
@@ -24,6 +28,26 @@ function createIoCapture() {
 }
 
 describe("runCli", () => {
+  it("detects main execution when argv[1] is a symlink path", async () => {
+    const projectDir = await createTempProject();
+    try {
+      const cliPath = path.join(projectDir, "dist", "cli.js");
+      const binPath = path.join(projectDir, "node_modules", ".bin", "vitest-test-ratio");
+      await writeProjectFile(projectDir, "dist/cli.js", "export {};\n");
+      await mkdir(path.dirname(binPath), { recursive: true });
+      await symlink(cliPath, binPath);
+
+      expect(shouldRunAsMain(pathToFileURL(realpathSync(cliPath)).href, binPath)).toBe(true);
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
+
+  it("returns false when argv[1] is unavailable or invalid", () => {
+    expect(shouldRunAsMain("file:///tmp/cli.js", undefined)).toBe(false);
+    expect(shouldRunAsMain("file:///tmp/cli.js", "/tmp/does-not-exist.js")).toBe(false);
+  });
+
   it("prints rails-stats-like summary", async () => {
     const projectDir = await createTempProject();
     try {
