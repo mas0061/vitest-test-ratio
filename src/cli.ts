@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { realpathSync } from "node:fs";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { analyzeProject } from "./analyzer.js";
 import { formatTextReport, selectTopEntries, sortFileEntries } from "./format.js";
 import type { AnalysisResult } from "./types.js";
@@ -149,7 +149,8 @@ export function shouldRunAsMain(importMetaUrl: string, argv1: string | undefined
   }
 
   try {
-    return importMetaUrl === pathToFileURL(realpathSync(argv1)).href;
+    const argvPath = argv1.startsWith("file:") ? fileURLToPath(new URL(argv1)) : argv1;
+    return importMetaUrl === pathToFileURL(realpathSync(argvPath)).href;
   } catch {
     return false;
   }

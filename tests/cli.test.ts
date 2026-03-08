@@ -46,6 +46,20 @@ describe("runCli", () => {
     }
   });
 
+  it("detects main execution when argv[1] is a file URL", async () => {
+    const projectDir = await createTempProject();
+    try {
+      const cliPath = path.join(projectDir, "dist", "cli.js");
+      await writeProjectFile(projectDir, "dist/cli.js", "export {};\n");
+
+      expect(
+        shouldRunAsMain(pathToFileURL(realpathSync(cliPath)).href, pathToFileURL(cliPath).href),
+      ).toBe(true);
+    } finally {
+      await removeTempProject(projectDir);
+    }
+  });
+
   it("returns false when argv[1] is unavailable or invalid", () => {
     const candidatePath = path.join(os.tmpdir(), "cli.js");
     const missingPath = path.join(os.tmpdir(), `does-not-exist-${Date.now()}.js`);
